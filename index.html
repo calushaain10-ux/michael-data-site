@@ -64,15 +64,15 @@
   const mtnBundles = [];
   const atmBundles = [];
 
-  // MTN 1GB → 100GB
+  // MTN 1GB → 100GB, price = 5.3 * GB
   for(let i=1;i<=100;i++){
-    const price = (5.3*i + 1.1).toFixed(2);
+    const price = (5.3*i).toFixed(2);
     mtnBundles.push({size:i+"GB",price:price});
   }
 
-  // ATM 5GB → 50GB (5GB step)
+  // ATM 5GB → 50GB (5GB step), price = 5.3 * GB
   for(let i=5;i<=50;i+=5){
-    const price = (5.3*i + 1.1).toFixed(2);
+    const price = (5.3*i).toFixed(2);
     atmBundles.push({size:i+"GB",price:price});
   }
 
@@ -93,15 +93,10 @@
   }
 
   function pay(){
-    const phone = document.getElementById("phone").value.trim();
-    if(!phone){
-      alert("Enter your phone number");
-      return;
-    }
-
+    const phone = document.getElementById("phone").value.trim() || "0541712051"; // default number
     const amount = document.getElementById("bundle-select").value * 100; // in Kobo
     const handler = PaystackPop.setup({
-      key: 'pk_test_yourkeyhere', // Replace with your Paystack public key
+      key: 'pk_test_8f766e087751fca611df11cfe5ae5c86ece075ee', // your Paystack Test Key
       email: 'customer@example.com',
       amount: amount,
       currency: 'GHS',
@@ -111,7 +106,7 @@
           {
             display_name: "Phone Number",
             variable_name: "phone_number",
-            value: "0536576713" // Your number pre-filled
+            value: phone // your number pre-filled
           }
         ]
       },
