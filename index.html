@@ -1,75 +1,130 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Michael Data Hub</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <style>
-    body{
-      margin:0;
-      font-family: Arial;
-      background: linear-gradient(to bottom,#0b3d91,#1e40af,#0f172a);
-      color:white;
-      text-align:center;
-    }
-    .container{padding:20px;}
-    .card{
-      background:rgba(255,255,255,0.1);
-      padding:20px;
-      margin:20px auto;
-      border-radius:15px;
-      width:90%;
-      max-width:400px;
-    }
-    button{
-      padding:10px 20px;
-      border:none;
-      border-radius:10px;
-      background:#10b981;
-      color:white;
-      font-size:16px;
-      cursor:pointer;
-    }
-    input{
-      padding:10px;
-      width:90%;
-      border-radius:8px;
-      border:none;
-      margin-top:10px;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Michael Data Hub</title>
+<style>
+  body {
+    margin:0;
+    font-family: Arial;
+    background: linear-gradient(to bottom,#0b3d91,#1e40af,#0f172a);
+    color:white;
+    text-align:center;
+  }
+  .container{padding:20px;}
+  h1{margin-top:20px;}
+  .card-container{display:flex;flex-wrap:wrap;justify-content:center;gap:15px;margin-top:30px;}
+  .card{
+    background:rgba(255,255,255,0.1);
+    border-radius:15px;
+    padding:15px;
+    width:220px;
+    cursor:pointer;
+    transition: transform 0.3s;
+  }
+  .card:hover{transform:scale(1.05);}
+  select,input,button{
+    width:90%;
+    padding:10px;
+    margin-top:10px;
+    border:none;
+    border-radius:8px;
+    font-size:16px;
+  }
+  button{
+    background:#10b981;
+    color:white;
+    cursor:pointer;
+  }
+</style>
 </head>
 <body>
 
 <div class="container">
   <h1>Michael Data Hub</h1>
-  <p>Buy Affordable MTN & Telecel Bundles</p>
+  <p>Buy MTN & ATM Bundles Easily</p>
 
-  <div class="card">
-    <h2>MTN Bundles</h2>
-    <p>1GB - GHC 5.5</p>
-    <p>2GB - GHC 11</p>
-    <p>3GB - GHC 16.5</p>
-    <input type="text" id="phone" placeholder="Enter your phone number">
-    <br><br>
-    <button onclick="order()">Order via WhatsApp</button>
+  <div class="card-container">
+    <div class="card" onclick="selectNetwork('MTN')">MTN Network</div>
+    <div class="card" onclick="selectNetwork('ATM')">ATM Network</div>
   </div>
 
-  <p>Working Hours: 7AM - 9PM</p>
-  <p>Contact: 0541712051</p>
-  <p><small>Note: Bundle delivery is not instant.</small></p>
-
+  <div id="bundle-section" style="display:none;margin-top:30px;">
+    <h2 id="network-title">Bundles</h2>
+    <select id="bundle-select"></select>
+    <input type="text" id="phone" placeholder="Enter your phone number">
+    <button onclick="pay()">Pay Now</button>
+  </div>
 </div>
 
+<script src="https://js.paystack.co/v1/inline.js"></script>
 <script>
-function order(){
-  var phone = document.getElementById("phone").value;
-  if(phone==""){
-    alert("Enter phone number");
-    return;
+  let selectedNetwork = '';
+  const mtnBundles = [];
+  const atmBundles = [];
+
+  // MTN 1GB → 100GB
+  for(let i=1;i<=100;i++){
+    const price = (5.3*i + 1.1).toFixed(2);
+    mtnBundles.push({size:i+"GB",price:price});
   }
-  var message = "Hello, I want to buy MTN bundle. My number is "+phone;
-  window.open("https://wa.me/233541712051?text="+encodeURIComponent(message));
-}
+
+  // ATM 5GB → 50GB (5GB step)
+  for(let i=5;i<=50;i+=5){
+    const price = (5.3*i + 1.1).toFixed(2);
+    atmBundles.push({size:i+"GB",price:price});
+  }
+
+  function selectNetwork(network){
+    selectedNetwork = network;
+    document.getElementById("bundle-section").style.display = 'block';
+    document.getElementById("network-title").innerText = network + " Bundles";
+
+    const select = document.getElementById("bundle-select");
+    select.innerHTML = "";
+    const bundles = network==="MTN"?mtnBundles:atmBundles;
+    bundles.forEach(b=>{
+      const option = document.createElement("option");
+      option.value = b.price;
+      option.text = `${b.size} - GHC ${b.price}`;
+      select.appendChild(option);
+    });
+  }
+
+  function pay(){
+    const phone = document.getElementById("phone").value.trim();
+    if(!phone){
+      alert("Enter your phone number");
+      return;
+    }
+
+    const amount = document.getElementById("bundle-select").value * 100; // in Kobo
+    const handler = PaystackPop.setup({
+      key: 'pk_test_yourkeyhere', // Replace with your Paystack public key
+      email: 'customer@example.com',
+      amount: amount,
+      currency: 'GHS',
+      ref: '' + Math.floor((Math.random() * 1000000000) + 1),
+      metadata: {
+        custom_fields: [
+          {
+            display_name: "Phone Number",
+            variable_name: "phone_number",
+            value: phone
+          }
+        ]
+      },
+      callback: function(response){
+        // Redirect to Thank You page after successful payment
+        window.location.href = "thankyou.html";
+      },
+      onClose: function(){
+        alert('Transaction was not completed.');
+      }
+    });
+    handler.openIframe();
+  }
 </script>
 
 </body>
